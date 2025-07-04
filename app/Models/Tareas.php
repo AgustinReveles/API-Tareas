@@ -4,20 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Tareas extends Model
-{
-    protected $table = 'tareas';
-    protected $primaryKey = 'ID';
-    protected $fillable = ['Titulo', 'Descripcion', 'FechaHora', 'Estado'];
+class Tareas extends Model {
+    protected $fillable = ['titulo', 'cuerpo', 'id_autor', 'id_user_asignado', 'estado', 'expiracion'];
 
-    public function usuariosAsignados()
-    {
-        return $this->belongsToMany(Usuario::class, 'asignacion_tareas', 'IDTarea', 'IDUsuario')
-                   ->withPivot('FechaHora');
+    public function categories() {
+        return $this->belongsToMany(Categorias::class);
     }
 
-    public function historiales()
-    {
-        return $this->hasMany(Historial::class, 'IDTarea');
+    public function comments() {
+        return $this->hasMany(Comentarios::class);
     }
 }

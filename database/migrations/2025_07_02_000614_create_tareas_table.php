@@ -12,11 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tareas', function (Blueprint $table) {
-            $table->id('ID');
-            $table->string('Titulo');
-            $table->text('Descripcion');
-            $table->dateTime('FechaHora');
-            $table->string('Estado')->default('Pendiente');
+            $table->id();
+            $table->string('titulo');
+            $table->text('cuerpo');
+            $table->unsignedBigInteger('id_autor');
+            $table->unsignedBigInteger('id_user_asignado')->nullable();
+            $table->string('estado')->default('nuevo');
+            $table->dateTime('expiracion')->nullable();
             $table->timestamps();
         });
     }
