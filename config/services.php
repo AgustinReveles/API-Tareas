@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'api_historial' => [
+        'url' => env('API_HISTORIAL_URL'),
+        'token' => env('API_HISTORIAL_TOKEN', null),
+    ],
+
 ];
