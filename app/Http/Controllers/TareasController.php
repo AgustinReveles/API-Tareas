@@ -85,6 +85,7 @@ class TareasController extends Controller
     public function destroy($id)
     {
         $tarea = Tareas::findOrFail($id);
+
         $this->logHistorial([
             'titulo_tarea' => $tarea->titulo,
             'estado' => $tarea->estado,
@@ -92,6 +93,7 @@ class TareasController extends Controller
             'fecha' => now()->toDateTimeString(),
             'accion' => 'eliminada',
         ]);
+
         $tarea->delete();
 
         return response()->json(null, 204);
@@ -108,7 +110,7 @@ class TareasController extends Controller
         $comentario = new Comentarios();
         $comentario->contenido = $request->contenido;
         $comentario->id_tarea = $id;
-        $comentario->id_usuario = $request->user()->id;
+        $comentario->id_usuario = $request->usuario()->id;
         $comentario->save();
 
         return response()->json($comentario, 201);
@@ -126,7 +128,5 @@ class TareasController extends Controller
                 'data_sent' => $data,
             ]);
         }
-
     }
-
 }
