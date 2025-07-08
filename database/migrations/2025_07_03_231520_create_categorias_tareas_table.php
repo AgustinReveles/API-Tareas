@@ -12,8 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categorias_tareas', function (Blueprint $table) {
-            $table->foreignId('id_tareas')->constrained();
-            $table->foreignId('id_categorias')->constrained();
+            $table->unsignedBigInteger('id_tareas');
+            $table->unsignedBigInteger('id_categorias');
+            $table->timestamps();
+            $table->foreign('id_tareas')
+                  ->references('id')
+                  ->on('tareas')
+                  ->onDelete('cascade');
+            $table->foreign('id_categorias')
+                  ->references('id')
+                  ->on('categorias')
+                  ->onDelete('cascade');
         });
     }
 

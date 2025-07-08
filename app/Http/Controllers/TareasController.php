@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -11,87 +10,79 @@ class TareasController extends Controller
 {
     public function index()
     {
-        return Cache::remember('tareas', 60, function () {
-            return Tareas::with('categorias', 'comentarios')->get();
-        });
+        return Cache::remember('tareas', 60, fn() =>
+            Tareas::with('categorias','comentarios')->get()
+        );
     }
 
     public function store(Request $request)
     {
+        $userId = $request->user()?->id ?? null;
+
         $request->validate([
-            'titulo' => 'required|string|max:255',
-            'cuerpo' => 'required|string',
-            'estado' => 'required|string',
+            'titulo'           => 'required|string|max:255',
+            'cuerpo'           => 'required|string',
+            'estado'           => 'required|string',
             'fecha_expiracion' => 'nullable|date',
-            'categorias' => 'nullable|array'
+            'categorias'       => 'nullable|array',
         ]);
 
-        $tarea = new Tareas();
-        $tarea->titulo = $request->titulo;
-        $tarea->cuerpo = $request->cuerpo;
-        $tarea->estado = $request->estado;
-        $tarea->fecha_expiracion = $request->fecha_expiracion;
-        $tarea->id_autor = $request->user()->id;
-        $tarea->id_usuario_asignado = $request->id_usuario_asignado ?? null;
-        $tarea->save();
+        $t = new Tareas();
+        $t->titulo              = $request->titulo;
+        $t->cuerpo              = $request->cuerpo;
+        $t->estado              = $request->estado;
+        $t->fecha_expiracion    = $request->fecha_expiracion;
+        $t->id_autor            = $userId;
+        $t->id_usuario_asignado = $request->id_usuario_asignado ?? null;
+        $t->save();
 
         if ($request->has('categorias')) {
-            $tarea->categorias()->sync($request->categorias);
+            $t->categorias()->sync($request->categorias);
         }
 
-        $data = [
-            'titulo_tarea' => $tarea->titulo,
-            'estado' => $tarea->estado,
-            'id_usuario' => $tarea->id_autor,
-        ];
-
         Http::withHeaders([
-            'Authorization' => 'Bearer ' . config('services.api_historial.token'),
-        ])->post(config('services.api_historial.url') . '/log', $data);
+            'Authorization' => 'Bearer '.config('services.api_historial.token'),
+        ])->post(config('services.api_historial.url').'/log', [
+            'titulo_tarea' => $t->titulo,
+            'estado'       => $t->estado,
+            'id_usuario'   => $userId,
+        ]);
 
-        return response()->json($tarea, 201);
+        return response()->json($t, 201);
     }
 
     public function show($id)
     {
-        $tarea = Tareas::with('categorias', 'comentarios')->findOrFail($id);
-        return response()->json($tarea);
+        $t = Tareas::with('categorias','comentarios')->findOrFail($id);
+        return response()->json($t);
     }
 
     public function update(Request $request, $id)
     {
-        $tarea = Tareas::findOrFail($id);
-        $tarea->update($request->only([
-            'titulo', 'cuerpo', 'estado', 'fecha_expiracion', 'id_usuario_asignado'
+        $t = Tareas::findOrFail($id);
+        $t->update($request->only([
+            'titulo','cuerpo','estado','fecha_expiracion','id_usuario_asignado'
         ]));
-
         if ($request->has('categorias')) {
-            $tarea->categorias()->sync($request->categorias);
+            $t->categorias()->sync($request->categorias);
         }
-
-        return response()->json($tarea);
+        return response()->json($t);
     }
 
     public function destroy($id)
     {
-        $tarea = Tareas::findOrFail($id);
-        $tarea->delete();
-        return response()->json(['mensaje' => 'Tarea eliminada']);
+        Tareas::findOrFail($id)->delete();
+        return response()->json(['mensaje'=>'Tarea eliminada']);
     }
 
     public function addComentarios(Request $request, $id)
     {
-        $request->validate([
-            'cuerpo' => 'required|string',
+        $request->validate(['cuerpo'=>'required|string']);
+        $t = Tareas::findOrFail($id);
+        $c = $t->comentarios()->create([
+            'cuerpo'     => $request->cuerpo,
+            'id_usuario' => $request->user()?->id,
         ]);
-
-        $tarea = Tareas::findOrFail($id);
-
-        $comentario = $tarea->comentarios()->create([
-            'cuerpo' => $request->cuerpo,
-            'id_usuario' => $request->user()->id, // ✔ corregido aquí
-        ]);
-
-        return response()->json($comentario, 201);
+        return response()->json($c, 201);
     }
 }

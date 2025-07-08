@@ -13,10 +13,18 @@ return new class extends Migration
     {
         Schema::create('comentarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_tareas')->constrained();
+            $table->unsignedBigInteger('id_tareas');
             $table->unsignedBigInteger('id_usuario');
             $table->text('cuerpo');
             $table->timestamps();
+            $table->foreign('id_tareas')
+                  ->references('id')
+                  ->on('tareas')
+                  ->onDelete('cascade');
+            $table->foreign('id_usuario')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('cascade');
         });
     }
 

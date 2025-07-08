@@ -1,27 +1,27 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Http;
 
 class AuthenticateWithAuthApi
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle($request, Closure $next) {
-        $response = Http::get(config('services.api_autenticacion.url').'/validate', [
-            'token' => $request->bearerToken()
-        ]);
+    public function handle(Request $request, Closure $next)
+    {
+        $token = $request->bearerToken();
 
-        if ($response->status() !== 200) {
+        $response = Http::withToken($token)
+            ->get(config('services.api_autenticacion.url') . '/api/user');
+
+        if (! $response->successful()) {
             return response()->json(['error' => 'No autorizado'], 401);
         }
+        $userData = $response->json();
+        $request->setUserResolver(function () use ($userData) {
+            return (object) $userData;
+        });
 
         return $next($request);
-}
+    }
 }
